@@ -17,7 +17,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let windowScene = (scene as? UIWindowScene) else { return }
         
         window?.windowScene = windowScene
-        window?.rootViewController = RxTableViewController()
+        window?.rootViewController = RxPickerViewController()
         window?.makeKeyAndVisible()
     }
 
