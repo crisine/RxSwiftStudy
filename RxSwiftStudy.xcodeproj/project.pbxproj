@@ -20,6 +20,7 @@
 		FA564AFE2BB44AA000FFB8C6 /* RxTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA564AFD2BB44AA000FFB8C6 /* RxTableViewController.swift */; };
 		FA564B002BB4511800FFB8C6 /* RxPickerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA564AFF2BB4511800FFB8C6 /* RxPickerViewController.swift */; };
 		FA564B022BB4556100FFB8C6 /* RxNumbersViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA564B012BB4556100FFB8C6 /* RxNumbersViewController.swift */; };
+		FA564B042BB4930E00FFB8C6 /* RxSimpleValidationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA564B032BB4930E00FFB8C6 /* RxSimpleValidationViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -35,6 +36,7 @@
 		FA564AFD2BB44AA000FFB8C6 /* RxTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RxTableViewController.swift; sourceTree = "<group>"; };
 		FA564AFF2BB4511800FFB8C6 /* RxPickerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RxPickerViewController.swift; sourceTree = "<group>"; };
 		FA564B012BB4556100FFB8C6 /* RxNumbersViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RxNumbersViewController.swift; sourceTree = "<group>"; };
+		FA564B032BB4930E00FFB8C6 /* RxSimpleValidationViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RxSimpleValidationViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -97,6 +99,7 @@
 				FA564AFD2BB44AA000FFB8C6 /* RxTableViewController.swift */,
 				FA564AFF2BB4511800FFB8C6 /* RxPickerViewController.swift */,
 				FA564B012BB4556100FFB8C6 /* RxNumbersViewController.swift */,
+				FA564B032BB4930E00FFB8C6 /* RxSimpleValidationViewController.swift */,
 			);
 			path = RxSwift;
 			sourceTree = "<group>";
@@ -188,6 +191,7 @@
 				FA564ADE2BB4492000FFB8C6 /* AppDelegate.swift in Sources */,
 				FA564AFE2BB44AA000FFB8C6 /* RxTableViewController.swift in Sources */,
 				FA564AE02BB4492000FFB8C6 /* SceneDelegate.swift in Sources */,
+				FA564B042BB4930E00FFB8C6 /* RxSimpleValidationViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
