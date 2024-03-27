@@ -19,6 +19,7 @@
 		FA564AFC2BB44A6500FFB8C6 /* BaseViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA564AFB2BB44A6500FFB8C6 /* BaseViewController.swift */; };
 		FA564AFE2BB44AA000FFB8C6 /* RxTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA564AFD2BB44AA000FFB8C6 /* RxTableViewController.swift */; };
 		FA564B002BB4511800FFB8C6 /* RxPickerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA564AFF2BB4511800FFB8C6 /* RxPickerViewController.swift */; };
+		FA564B022BB4556100FFB8C6 /* RxNumbersViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA564B012BB4556100FFB8C6 /* RxNumbersViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -33,6 +34,7 @@
 		FA564AFB2BB44A6500FFB8C6 /* BaseViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaseViewController.swift; sourceTree = "<group>"; };
 		FA564AFD2BB44AA000FFB8C6 /* RxTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RxTableViewController.swift; sourceTree = "<group>"; };
 		FA564AFF2BB4511800FFB8C6 /* RxPickerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RxPickerViewController.swift; sourceTree = "<group>"; };
+		FA564B012BB4556100FFB8C6 /* RxNumbersViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RxNumbersViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -94,6 +96,7 @@
 			children = (
 				FA564AFD2BB44AA000FFB8C6 /* RxTableViewController.swift */,
 				FA564AFF2BB4511800FFB8C6 /* RxPickerViewController.swift */,
+				FA564B012BB4556100FFB8C6 /* RxNumbersViewController.swift */,
 			);
 			path = RxSwift;
 			sourceTree = "<group>";
@@ -179,6 +182,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				FA564AE22BB4492000FFB8C6 /* ViewController.swift in Sources */,
+				FA564B022BB4556100FFB8C6 /* RxNumbersViewController.swift in Sources */,
 				FA564AFC2BB44A6500FFB8C6 /* BaseViewController.swift in Sources */,
 				FA564B002BB4511800FFB8C6 /* RxPickerViewController.swift in Sources */,
 				FA564ADE2BB4492000FFB8C6 /* AppDelegate.swift in Sources */,
