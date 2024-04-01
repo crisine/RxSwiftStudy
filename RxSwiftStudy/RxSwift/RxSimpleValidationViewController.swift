@@ -45,9 +45,13 @@ final class RxSimpleValidationViewController: BaseViewController {
     
     private let disposeBag = DisposeBag()
     
+    private var nickname = Observable.just("고래밥")
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         bind()
+        
+        
     }
     
     override func configureHierarchy() {
