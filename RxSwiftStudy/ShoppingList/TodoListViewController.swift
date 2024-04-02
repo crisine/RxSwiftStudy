@@ -18,8 +18,13 @@ final class TodoListViewController: BaseViewController {
         case todo
     }
     
-    private let diffableTableView: UITableView = {
-        let view = UITableView(frame: .zero, style: .insetGrouped)
+    enum Item: Hashable {
+        case input(dummy: Int)
+        case todo(todo: Todo)
+    }
+    
+    private lazy var diffableCollectionView: UICollectionView = {
+        let view = UICollectionView(frame: .zero, collectionViewLayout: createLayout())
         view.clipsToBounds = true
         view.backgroundColor = .white
         view.layer.cornerRadius = 8
@@ -43,13 +48,13 @@ final class TodoListViewController: BaseViewController {
     }
     
     override func configureHierarchy() {
-        [diffableTableView].forEach {
+        [diffableCollectionView].forEach {
             view.addSubview($0)
         }
     }
     
     override func configureConstraints() {
-        diffableTableView.snp.makeConstraints { make in
+        diffableCollectionView.snp.makeConstraints { make in
             make.edges.equalTo(view.safeAreaLayoutGuide).inset(16)
         }
     }
@@ -57,41 +62,29 @@ final class TodoListViewController: BaseViewController {
     override func configureView() {
         view.backgroundColor = .white
         
-        diffableTableView.delegate = self
-        diffableTableView.register(TodoInputTableViewCell.self, forCellReuseIdentifier: TodoInputTableViewCell.reuseIdentifier)
-        diffableTableView.register(TodoTableViewCell.self, forCellReuseIdentifier: TodoTableViewCell.reuseIdentifier)
+        diffableCollectionView.delegate = self
+        diffableCollectionView.register(TodoInputCollectionViewCell.self, forCellWithReuseIdentifier: TodoInputCollectionViewCell.reuseIdentifier)
+        diffableCollectionView.register(TodoCollectionViewCell.self, forCellWithReuseIdentifier: TodoCollectionViewCell.reuseIdentifier)
     }
 }
 
 extension TodoListViewController {
-    final class DataSource: UITableViewDiffableDataSource<SectionType, Todo> {
-        override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
-            return true
-        }
-
-        override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
-            if editingStyle == .delete {
-                if let identifierToDelete = itemIdentifier(for: indexPath) {
-                    var snapshot = self.snapshot()
-                    snapshot.deleteItems([identifierToDelete])
-                    apply(snapshot)
-                }
-            }
-        }
+    final class DataSource: UICollectionViewDiffableDataSource<SectionType, Item> {
+        
     }
 }
 
 extension TodoListViewController {
     private func configureDataSource() {
-        dataSource = DataSource(tableView: diffableTableView) { (tableView, indexPath, todo) -> UITableViewCell? in
+        dataSource = DataSource(collectionView: diffableCollectionView) { (collectionView, indexPath, itemIdentifier ) -> UICollectionViewCell? in
             
-            switch Section(rawValue: indexPath.section) {
-            case .input:
-                let cell = tableView.dequeueReusableCell(withIdentifier: TodoInputTableViewCell.reuseIdentifier, for: indexPath) as! TodoInputTableViewCell
+            switch itemIdentifier {
+            case .input(let dummy):
+                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: TodoInputCollectionViewCell.reuseIdentifier, for: indexPath) as! TodoInputCollectionViewCell
                 print("input cell draw")
                 return cell
-            case .todo:
-                let cell = tableView.dequeueReusableCell(withIdentifier: TodoTableViewCell.reuseIdentifier, for: indexPath) as! TodoTableViewCell
+            case .todo(let todo):
+                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: TodoCollectionViewCell.reuseIdentifier, for: indexPath) as! TodoCollectionViewCell
                 print("todo cell draw")
                 
                 cell.titleLabel.text = todo.titleText
@@ -104,9 +97,9 @@ extension TodoListViewController {
                 
                 cell.checkButton.rx.tap
                     .bind(with: self) { owner, _ in
-                        var todo = owner.dataSource.itemIdentifier(for: indexPath)!
-                        todo.isCompleted.toggle()
-                        owner.repository.update(todo: todo)
+                        var updateTodo = todo
+                        updateTodo.isCompleted.toggle()
+                        owner.repository.update(todo: updateTodo)
                         owner.updateSnapshot()
                     }
                     .disposed(by: cell.disposeBag)
@@ -123,14 +116,16 @@ extension TodoListViewController {
         dataSource.apply(snapshot, animatingDifferences: true)
     }
     
-    private func initialSnapshot() -> NSDiffableDataSourceSnapshot<SectionType, Todo> {
+    private func initialSnapshot() -> NSDiffableDataSourceSnapshot<SectionType, Item> {
         let todoList = repository.fetch()
         
-        var snapshot = NSDiffableDataSourceSnapshot<SectionType, Todo>()
+        var snapshot = NSDiffableDataSourceSnapshot<SectionType, Item>()
         snapshot.appendSections([.input])
-        snapshot.appendItems([RealmTodo(titleText: "", isCompleted: false, isFavorited: false).toStruct()]) // MARK: Section을 띄우기 위한 땜빵. 제대로 띄우려면 ItemType도 만들 것
+        snapshot.appendItems([.input(dummy: 1)])
         snapshot.appendSections([.todo])
-        snapshot.appendItems(todoList)
+        todoList.forEach { todo in
+            snapshot.appendItems([.todo(todo: todo)])
+        }
         
         return snapshot
     }
@@ -138,20 +133,50 @@ extension TodoListViewController {
     private func updateSnapshot() {
         let todoList = repository.fetch()
         
-        var snapshot = NSDiffableDataSourceSnapshot<SectionType, Todo>()
+        var snapshot = NSDiffableDataSourceSnapshot<SectionType, Item>()
         snapshot.appendSections([.input])
-        snapshot.appendItems([RealmTodo(titleText: "", isCompleted: false, isFavorited: false).toStruct()])
+        snapshot.appendItems([.input(dummy: 1)])
         snapshot.appendSections([.todo])
-        snapshot.appendItems(todoList)
+        todoList.forEach { todo in
+            snapshot.appendItems([.todo(todo: todo)])
+        }
         
         dataSource.apply(snapshot, animatingDifferences: true)
     }
 }
 
-// MARK: TableView Delegate 관련
-extension TodoListViewController: UITableViewDelegate {
+
+extension TodoListViewController: UICollectionViewDelegate {
+    private func createLayout() -> UICollectionViewCompositionalLayout {
+        UICollectionViewCompositionalLayout { sectionIndex, layoutEnvironment in
+            
+            guard let section = Section(rawValue: sectionIndex) else { return nil }
+            
+            switch section {
+            case .input:
+                let item = NSCollectionLayoutItem(layoutSize: .init(widthDimension: .fractionalWidth(1), heightDimension: .fractionalHeight(1)))
+                
+                let group = NSCollectionLayoutGroup.horizontal(layoutSize: .init(widthDimension: .fractionalWidth(1), heightDimension: .absolute(60)), subitems: [item])
+                
+                let layoutSection = NSCollectionLayoutSection(group: group)
+                layoutSection.contentInsets = .init(top: 8, leading: 8, bottom: 8, trailing: 8)
+                
+                return layoutSection
+            case .todo:
+                let item = NSCollectionLayoutItem(layoutSize: .init(widthDimension: .fractionalWidth(1), heightDimension: .fractionalHeight(1)))
+                
+                let group = NSCollectionLayoutGroup.vertical(layoutSize: .init(widthDimension: .fractionalWidth(1), heightDimension: .absolute(48)), subitems: [item])
+                
+                let layoutSection = NSCollectionLayoutSection(group: group)
+                layoutSection.interGroupSpacing = 2
+                layoutSection.contentInsets = .init(top: 0, leading: 8, bottom: 0, trailing: 8)
+                
+                return layoutSection
+            }
+        }
+    }
     
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        // 여기서 화면이동 처리
+    func collectionView(_ collectionView: UICollectionView, canEditItemAt indexPath: IndexPath) -> Bool {
+        return true
     }
 }

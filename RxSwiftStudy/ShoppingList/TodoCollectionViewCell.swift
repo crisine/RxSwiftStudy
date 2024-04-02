@@ -1,5 +1,5 @@
 //
-//  TodoTableViewCell.swift
+//  TodoCollectionViewCell.swift
 //  RxSwiftStudy
 //
 //  Created by Minho on 4/1/24.
@@ -8,11 +8,19 @@
 import UIKit
 import RxSwift
 
-final class TodoTableViewCell: UITableViewCell {
+final class TodoCollectionViewCell: UICollectionViewCell {
     
     static let reuseIdentifier = "TodoCell"
 
     var disposeBag = DisposeBag()
+    
+    private let backView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .systemGray6
+        view.clipsToBounds = true
+        view.layer.cornerRadius = 8
+        return view
+    }()
     
     let checkButton: UIButton = {
         let view = UIButton()
@@ -32,46 +40,52 @@ final class TodoTableViewCell: UITableViewCell {
         return view
     }()
     
-    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
-        super.init(style: style, reuseIdentifier: reuseIdentifier)
-    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        
         configureHierarchy()
         configureConstraints()
         configureView()
     }
+    
     
     override func prepareForReuse() {
         disposeBag = DisposeBag()
     }
     
     private func configureHierarchy() {
-        [checkButton, titleLabel, favoriteButton].forEach {
+        [backView, checkButton, titleLabel, favoriteButton].forEach {
             contentView.addSubview($0)
         }
     }
     
     private func configureConstraints() {
+        
+        backView.snp.makeConstraints { make in
+            make.edges.equalTo(contentView.safeAreaLayoutGuide).inset(4)
+        }
+        
         checkButton.snp.makeConstraints { make in
-            make.centerY.equalTo(contentView)
-            make.leading.equalTo(contentView).offset(16)
+            make.centerY.equalTo(backView)
+            make.leading.equalTo(backView).offset(16)
             make.size.equalTo(40)
         }
         
         titleLabel.snp.makeConstraints { make in
-            make.centerY.equalTo(contentView)
+            make.centerY.equalTo(backView)
             make.leading.equalTo(checkButton.snp.trailing).offset(8)
             make.trailing.equalTo(favoriteButton.snp.leading).inset(8)
         }
         
         favoriteButton.snp.makeConstraints { make in
-            make.centerY.equalTo(contentView)
-            make.trailing.equalTo(contentView).inset(16)
+            make.centerY.equalTo(backView)
+            make.trailing.equalTo(backView).inset(16)
             make.size.equalTo(40)
         }
     }
     
     private func configureView() {
-        contentView.backgroundColor = .systemGray6
+        
     }
     
     
