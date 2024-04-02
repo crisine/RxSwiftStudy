@@ -17,7 +17,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let windowScene = (scene as? UIWindowScene) else { return }
         
         window?.windowScene = windowScene
-        window?.rootViewController = RxSimpleValidationViewController()
+        window?.rootViewController = TodoListViewController()
         window?.makeKeyAndVisible()
     }
 
