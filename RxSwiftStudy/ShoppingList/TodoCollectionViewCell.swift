@@ -7,6 +7,7 @@
 
 import UIKit
 import RxSwift
+import RxCocoa
 
 final class TodoCollectionViewCell: UICollectionViewCell {
     
@@ -28,8 +29,8 @@ final class TodoCollectionViewCell: UICollectionViewCell {
         view.tintColor = .black
         return view
     }()
-    let titleLabel: UILabel = {
-        let view = UILabel()
+    let titleTextField: UITextField = {
+        let view = UITextField()
         view.font = .systemFont(ofSize: 18)
         return view
     }()
@@ -39,6 +40,19 @@ final class TodoCollectionViewCell: UICollectionViewCell {
         view.tintColor = .black
         return view
     }()
+    let detailButton: UIButton = {
+        let view = UIButton()
+        view.setImage(UIImage(systemName: "chevron.right.circle"), for: .normal)
+        view.tintColor = .black
+        return view
+    }()
+    let deleteButton: UIButton = {
+        let view = UIButton()
+        view.setImage(UIImage(systemName: "xmark"), for: .normal)
+        view.tintColor = .systemRed
+        return view
+    }()
+    
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -54,7 +68,7 @@ final class TodoCollectionViewCell: UICollectionViewCell {
     }
     
     private func configureHierarchy() {
-        [backView, checkButton, titleLabel, favoriteButton].forEach {
+        [backView, checkButton, titleTextField, favoriteButton, detailButton, deleteButton].forEach {
             contentView.addSubview($0)
         }
     }
@@ -71,7 +85,7 @@ final class TodoCollectionViewCell: UICollectionViewCell {
             make.size.equalTo(40)
         }
         
-        titleLabel.snp.makeConstraints { make in
+        titleTextField.snp.makeConstraints { make in
             make.centerY.equalTo(backView)
             make.leading.equalTo(checkButton.snp.trailing).offset(8)
             make.trailing.equalTo(favoriteButton.snp.leading).inset(8)
@@ -79,7 +93,19 @@ final class TodoCollectionViewCell: UICollectionViewCell {
         
         favoriteButton.snp.makeConstraints { make in
             make.centerY.equalTo(backView)
-            make.trailing.equalTo(backView).inset(16)
+            make.trailing.equalTo(detailButton.snp.leading).inset(8)
+            make.size.equalTo(40)
+        }
+        
+        detailButton.snp.makeConstraints { make in
+            make.centerY.equalTo(backView)
+            make.trailing.equalTo(deleteButton.snp.leading).inset(8)
+            make.size.equalTo(40)
+        }
+        
+        deleteButton.snp.makeConstraints { make in
+            make.centerY.equalTo(backView)
+            make.trailing.equalTo(backView).inset(8)
             make.size.equalTo(40)
         }
     }

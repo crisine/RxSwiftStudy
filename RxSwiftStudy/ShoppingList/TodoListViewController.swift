@@ -33,11 +33,15 @@ final class TodoListViewController: BaseViewController {
     
     typealias SectionType = Section
     private var dataSource: DataSource!
+    private var searchBar: UISearchBar!
+    private var todoList: [Todo] = []
     
     private let repository = RealmRepository()
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        todoList = repository.fetch()
         
         bind()
         configureDataSource()
@@ -47,10 +51,8 @@ final class TodoListViewController: BaseViewController {
         
     }
     
-    override func configureHierarchy() {
-        [diffableCollectionView].forEach {
-            view.addSubview($0)
-        }
+    override func configureHierarchy() {        
+        view.addSubview(diffableCollectionView)
     }
     
     override func configureConstraints() {
@@ -65,6 +67,14 @@ final class TodoListViewController: BaseViewController {
         diffableCollectionView.delegate = self
         diffableCollectionView.register(TodoInputCollectionViewCell.self, forCellWithReuseIdentifier: TodoInputCollectionViewCell.reuseIdentifier)
         diffableCollectionView.register(TodoCollectionViewCell.self, forCellWithReuseIdentifier: TodoCollectionViewCell.reuseIdentifier)
+        
+        navigationItem.title = "To do List"
+        
+        searchBar = UISearchBar()
+        searchBar.delegate = self
+        searchBar.placeholder = "할 일 검색"
+        
+        navigationItem.titleView = searchBar
     }
 }
 
@@ -81,13 +91,24 @@ extension TodoListViewController {
             switch itemIdentifier {
             case .input(let dummy):
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: TodoInputCollectionViewCell.reuseIdentifier, for: indexPath) as! TodoInputCollectionViewCell
-                print("input cell draw")
+                
+                cell.addButton.rx.tap
+                    .bind(with: self) { owner, _ in
+                        guard let titleText = cell.textField.text else { return }
+                        cell.textField.text = ""
+                        
+                        let newTodo = RealmTodo(titleText: titleText, isCompleted: false, isFavorited: false)
+                        owner.repository.create(realmTodo: newTodo)
+                        owner.todoList = owner.repository.fetch()
+                        owner.updateSnapshot()
+                    }
+                    .disposed(by: cell.disposeBag)
+                
                 return cell
             case .todo(let todo):
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: TodoCollectionViewCell.reuseIdentifier, for: indexPath) as! TodoCollectionViewCell
-                print("todo cell draw")
                 
-                cell.titleLabel.text = todo.titleText
+                cell.titleTextField.text = todo.titleText
                 
                 let favoriteButtonImage = todo.isFavorited ? UIImage(systemName: "star.fill") : UIImage(systemName: "star")
                 cell.favoriteButton.setImage(favoriteButtonImage, for: .normal)
@@ -100,16 +121,51 @@ extension TodoListViewController {
                         var updateTodo = todo
                         updateTodo.isCompleted.toggle()
                         owner.repository.update(todo: updateTodo)
+                        owner.todoList = owner.repository.fetch()
+                        owner.updateSnapshot()
+                    }
+                    .disposed(by: cell.disposeBag)
+                
+                cell.titleTextField.rx.controlEvent([.editingDidEnd])
+                    .asObservable()
+                    .subscribe(with: self) { owner, _ in
+                        guard let titleText = cell.titleTextField.text else { return }
+                        guard titleText != todo.titleText else { return } // MARK: distinctUntilChanged 로 어떻게 안되나?
+                        var updateTodo = todo
+                        updateTodo.titleText = titleText
+                        owner.repository.update(todo: updateTodo)
+                        owner.todoList = owner.repository.fetch()
+                        owner.updateSnapshot()
+                    }
+                    .disposed(by: cell.disposeBag)
+                
+                cell.favoriteButton.rx.tap
+                    .bind(with: self) { owner, _ in
+                        var updateTodo = todo
+                        updateTodo.isFavorited.toggle()
+                        owner.repository.update(todo: updateTodo)
+                        owner.todoList = owner.repository.fetch()
+                        owner.updateSnapshot()
+                    }
+                    .disposed(by: cell.disposeBag)
+                
+                cell.detailButton.rx.tap
+                    .bind(with: self) { owner, _ in
+                        let vc = DetailViewController()
+                        vc.selectedTodo = todo
+                        owner.navigationController?.pushViewController(vc, animated: true)
+                    }
+                
+                cell.deleteButton.rx.tap
+                    .bind(with: self) { owner, _ in
+                        owner.repository.delete(id: todo.id)
+                        owner.todoList = owner.repository.fetch()
                         owner.updateSnapshot()
                     }
                     .disposed(by: cell.disposeBag)
                 
                 return cell
-            default:
-                print("an error has occured")
             }
-            
-            return nil
         }
         
         let snapshot = initialSnapshot()
@@ -117,8 +173,6 @@ extension TodoListViewController {
     }
     
     private func initialSnapshot() -> NSDiffableDataSourceSnapshot<SectionType, Item> {
-        let todoList = repository.fetch()
-        
         var snapshot = NSDiffableDataSourceSnapshot<SectionType, Item>()
         snapshot.appendSections([.input])
         snapshot.appendItems([.input(dummy: 1)])
@@ -131,8 +185,6 @@ extension TodoListViewController {
     }
     
     private func updateSnapshot() {
-        let todoList = repository.fetch()
-        
         var snapshot = NSDiffableDataSourceSnapshot<SectionType, Item>()
         snapshot.appendSections([.input])
         snapshot.appendItems([.input(dummy: 1)])
@@ -148,7 +200,8 @@ extension TodoListViewController {
 
 extension TodoListViewController: UICollectionViewDelegate {
     private func createLayout() -> UICollectionViewCompositionalLayout {
-        UICollectionViewCompositionalLayout { sectionIndex, layoutEnvironment in
+        // MARK: CompositionalLayout
+        let layout = UICollectionViewCompositionalLayout { sectionIndex, layoutEnvironment in
             
             guard let section = Section(rawValue: sectionIndex) else { return nil }
             
@@ -174,9 +227,26 @@ extension TodoListViewController: UICollectionViewDelegate {
                 return layoutSection
             }
         }
+        
+        return layout
     }
     
     func collectionView(_ collectionView: UICollectionView, canEditItemAt indexPath: IndexPath) -> Bool {
         return true
+    }
+    
+}
+
+extension TodoListViewController: UISearchBarDelegate {
+    
+    // MARK: 지금이야 Local Realm에 데이터도 적고 로컬이라 상관없지만 이게 원격인 경우를 생각하면 매우 비효율이고, 사실 여기에 코드를 작성해서도 안 된다. (Rx는 bind함수에서 해결)
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        guard searchText != "" else {
+            todoList = repository.fetch()
+            updateSnapshot()
+            return
+        }
+        todoList = repository.fetch(titleText: searchText)
+        updateSnapshot()
     }
 }

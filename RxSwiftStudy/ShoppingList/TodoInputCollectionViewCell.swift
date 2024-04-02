@@ -7,6 +7,7 @@
 
 import UIKit
 import RxSwift
+import RxCocoa
 
 final class TodoInputCollectionViewCell: UICollectionViewCell {
     
@@ -28,6 +29,7 @@ final class TodoInputCollectionViewCell: UICollectionViewCell {
     let addButton: UIButton = {
         let view = UIButton(configuration: .filled())
         view.setTitle("추가", for: .normal)
+        view.setTitleColor(.black, for: .normal)
         view.clipsToBounds = true
         view.tintColor = .systemGray5
         view.layer.cornerRadius = 8
