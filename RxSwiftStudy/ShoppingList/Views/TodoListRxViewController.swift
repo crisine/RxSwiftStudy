@@ -56,23 +56,19 @@ final class TodoListRxViewController: BaseViewController {
     
     private func bind() {
         
-        searchBar.rx.text.orEmpty
-            .debounce(.milliseconds(300), scheduler: MainScheduler.instance)
-            .distinctUntilChanged()
-            .subscribe(with: self) { owner, query in
-                owner.viewModel.inputSearchBarQuery.onNext(query)
-            }
-            .disposed(by: disposeBag)
+        let input = TodoListViewModel.Input(searchBarText: searchBar.rx.text)
         
-        addButton.rx.tap
-            .withLatestFrom(titleTextField.rx.text.orEmpty)
-            .bind(with: self) { owner, titleText in
-                owner.viewModel.inputAddButtonTap.onNext(titleText)
-                owner.titleTextField.text = ""
-            }
-            .disposed(by: disposeBag)
+        let output = viewModel.transform(input: input)
         
-        viewModel.items
+//        addButton.rx.tap
+//            .withLatestFrom(titleTextField.rx.text.orEmpty)
+//            .bind(with: self) { owner, titleText in
+//                owner.viewModel.inputAddButtonTap.onNext(titleText)
+//                owner.titleTextField.text = ""
+//            }
+//            .disposed(by: disposeBag)
+        
+        output.items
             .bind(to: todoTableView.rx.items(cellIdentifier: TodoTableViewCell.reuseIdentifier, cellType: TodoTableViewCell.self)) { row, element, cell in
                 
                 let checkButtonImage = element.isCompleted ? UIImage(systemName: "checkmark.square.fill") : UIImage(systemName: "checkmark.square")
@@ -84,39 +80,39 @@ final class TodoListRxViewController: BaseViewController {
                 cell.favoriteButton.setImage(favoriteButtonImage, for: .normal)
                 
                 cell.titleTextField.text = element.titleText
-                cell.titleTextField.rx
-                    .controlEvent(.editingDidEnd)
-                    .withLatestFrom(cell.titleTextField.rx.text.orEmpty)
-                    .bind(with: self) { owner, titleText in
-                        let tuple = (element, titleText)
-                        owner.viewModel.inputTitleEditingDidEnd.onNext(tuple)
-                    }
-                    .disposed(by: cell.disposeBag)
+//                cell.titleTextField.rx
+//                    .controlEvent(.editingDidEnd)
+//                    .withLatestFrom(cell.titleTextField.rx.text.orEmpty)
+//                    .bind(with: self) { owner, titleText in
+//                        let tuple = (element, titleText)
+//                        owner.viewModel.inputTitleEditingDidEnd.onNext(tuple)
+//                    }
+//                    .disposed(by: cell.disposeBag)
                 
                 // MARK: RxSwift
-                cell.checkButton.rx.tap
-                    .bind(with: self) { owner, _ in
-                        owner.viewModel.inputCheckButtonTap.onNext(element)
-                    }
-                    .disposed(by: cell.disposeBag)
-                
-                cell.favoriteButton.rx.tap
-                    .bind(with: self) { owner, _ in
-                        owner.viewModel.inputFavoriteButtonTap.onNext(element)
-                    }
-                    .disposed(by: cell.disposeBag)
-                
-                cell.detailButton.rx.tap
-                    .bind(with: self) { owner, _ in
-                        // MARK: 이 경우엔 화면 이동을 어떻게?
-                    }
-                    .disposed(by: cell.disposeBag)
-                
-                cell.deleteButton.rx.tap
-                    .bind(with: self) { owner, _ in
-                        owner.viewModel.inputDeleteButtonTap.onNext(element)
-                    }
-                    .disposed(by: cell.disposeBag)
+//                cell.checkButton.rx.tap
+//                    .bind(with: self) { owner, _ in
+//                        owner.viewModel.inputCheckButtonTap.onNext(element)
+//                    }
+//                    .disposed(by: cell.disposeBag)
+//                
+//                cell.favoriteButton.rx.tap
+//                    .bind(with: self) { owner, _ in
+//                        owner.viewModel.inputFavoriteButtonTap.onNext(element)
+//                    }
+//                    .disposed(by: cell.disposeBag)
+//                
+//                cell.detailButton.rx.tap
+//                    .bind(with: self) { owner, _ in
+//                        // MARK: 이 경우엔 화면 이동을 어떻게?
+//                    }
+//                    .disposed(by: cell.disposeBag)
+//                
+//                cell.deleteButton.rx.tap
+//                    .bind(with: self) { owner, _ in
+//                        owner.viewModel.inputDeleteButtonTap.onNext(element)
+//                    }
+//                    .disposed(by: cell.disposeBag)
             }
             .disposed(by: disposeBag)
     }
