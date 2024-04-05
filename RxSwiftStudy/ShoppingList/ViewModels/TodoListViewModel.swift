@@ -17,23 +17,14 @@ final class TodoListViewModel {
 
     struct Input {
         let searchBarText: ControlProperty<String?>
-//        let addButton: ControlProperty<String>
-//        let checkButton: ControlProperty<Todo>
-//        let todoTitle: ControlProperty<(Todo, String)>
-//        let favoriteButton: ControlProperty<Todo>
-//        let deleteButton: ControlProperty<Todo>
+        let addButtonTap: ControlEvent<Void>
+        let todoTitle: ControlProperty<String?>
     }
     
     struct Output {
         let items: BehaviorSubject<[Todo]>
+        // let titleTextField: Driver<String>
     }
-    
-//    let inputSearchBarQuery = PublishSubject<String>()
-//    let inputAddButtonTap = PublishSubject<String>()
-//    let inputCheckButtonTap = PublishSubject<Todo>()
-//    let inputTitleEditingDidEnd = PublishSubject<(Todo, String)>()
-//    let inputFavoriteButtonTap = PublishSubject<Todo>()
-//    let inputDeleteButtonTap = PublishSubject<Todo>()
     
     private var disposeBag = DisposeBag()
     
@@ -52,61 +43,19 @@ final class TodoListViewModel {
             }
             .disposed(by: disposeBag)
         
+        input.addButtonTap
+        // MARK: withLatest를 사용하면 titleText가 없는데도 addButton을 누를 경우
+        // 마지막에 입력했던 todo Title로 계속 todo가 추가될 염려가 있다.
+            .withLatestFrom(input.todoTitle.orEmpty)
+            .subscribe(with: self) { owner, titleText in
+                let addTodo = RealmTodo(titleText: titleText, isCompleted: false, isFavorited: false)
+                owner.repository.create(realmTodo: addTodo)
+                owner.fetchTodoList()
+            }
+            .disposed(by: disposeBag)
+        
         return Output(items: items)
     }
-    
-//    init() {
-//        fetchTodoList()
-//        
-//        inputSearchBarQuery
-//            .subscribe(with: self) { owner, query in
-//                guard query != "" else {
-//                    owner.fetchTodoList()
-//                    return
-//                }
-//                owner.fetchTodoList(query: query)
-//            }
-//            .disposed(by: disposeBag)
-//        
-//        inputAddButtonTap
-//            .subscribe(with: self) { owner, titleText in
-//                let addTodo = RealmTodo(titleText: titleText, isCompleted: false, isFavorited: false)
-//                owner.repository.create(realmTodo: addTodo)
-//                owner.fetchTodoList()
-//            }
-//            .disposed(by: disposeBag)
-//        
-//        inputCheckButtonTap
-//            .subscribe(with: self) { owner, todo in
-//                var updateTodo = todo
-//                updateTodo.isCompleted.toggle()
-//                owner.updateTodo(todo: todo)
-//            }
-//            .disposed(by: disposeBag)
-//        
-//        inputTitleEditingDidEnd
-//            .subscribe(with: self) { owner, tuple in
-//                var updateTodo = tuple.0
-//                updateTodo.titleText = tuple.1
-//                owner.updateTodo(todo: updateTodo)
-//            }
-//            .disposed(by: disposeBag)
-//        
-//        inputFavoriteButtonTap
-//            .subscribe(with: self) { owner, todo in
-//                var updateTodo = todo
-//                updateTodo.isFavorited.toggle()
-//                owner.updateTodo(todo: todo)
-//            }
-//            .disposed(by: disposeBag)
-//        
-//        inputDeleteButtonTap
-//            .subscribe(with: self) { owner, todo in
-//                owner.repository.delete(id: todo.id)
-//                owner.fetchTodoList()
-//            }
-//            .disposed(by: disposeBag)
-//    }
     
     private func fetchTodoList() {
         todoList = repository.fetch()
@@ -118,8 +67,28 @@ final class TodoListViewModel {
         items.onNext(todoList)
     }
     
-    private func updateTodo(todo: Todo) {
+    func updateTodo(todo: Todo, updatePolicy: UpdatePolicy) {
+        
+        var updateTodo = todo
+        
+        switch updatePolicy {
+        case .complete:
+            updateTodo.isCompleted.toggle()
+        case .favorite:
+            updateTodo.isFavorited.toggle()
+        }
+        
         repository.update(todo: todo)
         fetchTodoList()
+    }
+    
+    func deleteTodo(todo: Todo) {
+        repository.delete(id: todo.id)
+        fetchTodoList()
+    }
+    
+    enum UpdatePolicy {
+        case complete
+        case favorite
     }
 }

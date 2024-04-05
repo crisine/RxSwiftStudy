@@ -56,17 +56,9 @@ final class TodoListRxViewController: BaseViewController {
     
     private func bind() {
         
-        let input = TodoListViewModel.Input(searchBarText: searchBar.rx.text)
+        let input = TodoListViewModel.Input(searchBarText: searchBar.rx.text, addButtonTap: addButton.rx.tap, todoTitle: titleTextField.rx.text)
         
         let output = viewModel.transform(input: input)
-        
-//        addButton.rx.tap
-//            .withLatestFrom(titleTextField.rx.text.orEmpty)
-//            .bind(with: self) { owner, titleText in
-//                owner.viewModel.inputAddButtonTap.onNext(titleText)
-//                owner.titleTextField.text = ""
-//            }
-//            .disposed(by: disposeBag)
         
         output.items
             .bind(to: todoTableView.rx.items(cellIdentifier: TodoTableViewCell.reuseIdentifier, cellType: TodoTableViewCell.self)) { row, element, cell in
@@ -90,29 +82,33 @@ final class TodoListRxViewController: BaseViewController {
 //                    .disposed(by: cell.disposeBag)
                 
                 // MARK: RxSwift
-//                cell.checkButton.rx.tap
-//                    .bind(with: self) { owner, _ in
-//                        owner.viewModel.inputCheckButtonTap.onNext(element)
-//                    }
-//                    .disposed(by: cell.disposeBag)
-//                
-//                cell.favoriteButton.rx.tap
-//                    .bind(with: self) { owner, _ in
-//                        owner.viewModel.inputFavoriteButtonTap.onNext(element)
-//                    }
-//                    .disposed(by: cell.disposeBag)
-//                
-//                cell.detailButton.rx.tap
-//                    .bind(with: self) { owner, _ in
-//                        // MARK: 이 경우엔 화면 이동을 어떻게?
-//                    }
-//                    .disposed(by: cell.disposeBag)
-//                
-//                cell.deleteButton.rx.tap
-//                    .bind(with: self) { owner, _ in
-//                        owner.viewModel.inputDeleteButtonTap.onNext(element)
-//                    }
-//                    .disposed(by: cell.disposeBag)
+                cell.checkButton.rx.tap
+                    .map { element }
+                    .bind(with: self) { owner, todo in
+                        owner.viewModel.updateTodo(todo: todo, updatePolicy: .complete)
+                    }
+                    .disposed(by: cell.disposeBag)
+                
+                cell.favoriteButton.rx.tap
+                    .map { element }
+                    .bind(with: self) { owner, todo in
+                        owner.viewModel.updateTodo(todo: todo, updatePolicy: .favorite)
+                    }
+                    .disposed(by: cell.disposeBag)
+                
+                cell.deleteButton.rx.tap
+                    .map { element }
+                    .bind(with: self) { owner, todo in
+                        owner.viewModel
+                            .deleteTodo(todo: todo)
+                    }
+                    .disposed(by: cell.disposeBag)
+            }
+            .disposed(by: disposeBag)
+        
+        Observable.zip(todoTableView.rx.itemSelected, todoTableView.rx.modelSelected(Todo.self))
+            .bind(with: self) { owner, todo in
+                // MARK: View 이동 처리
             }
             .disposed(by: disposeBag)
     }
